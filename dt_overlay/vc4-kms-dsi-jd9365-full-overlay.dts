@@ -1,0 +1,70 @@
+// JD9365Z with CTP and PCA9536
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2835";  
+
+	fragment@0 {
+		target = <&i2c_csi_dsi>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			pca: pca@41 {
+				compatible = "nxp,pca9536";
+				reg = <0x41>;
+				gpio-controller;
+				#gpio-cells = <2>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&dsi1>;
+		__overlay__{
+			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			port {
+				dsi_out_port:endpoint {
+					remote-endpoint = <&panel_dsi_port>;
+				};
+			};
+
+			jd9365:jd9365@0 {
+				compatible    = "fitipower,jd9365";
+				status        = "okay";
+				reg           = <0>;
+				reset-gpios   = <&pca 0 1>;
+				port {
+					panel_dsi_port: endpoint {
+						remote-endpoint = <&dsi_out_port>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&i2c_csi_dsi>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			ft6236@38 {
+				compatible = "focaltech,ft6236";
+				reg = <0x38>;
+				pinctrl-names = "default";
+				interrupt-parent = <&gpio>;
+				interrupts = <17 2>; /* rising edge */
+				touchscreen-size-y = <1280>;
+				touchscreen-size-x = <720>;
+				touchscreen-inverted-y = <1>;
+				touchscreen-inverted-x = <1>;
+				reset-gpios = <&pca 1 1>; /* active low */
+			};
+		};
+	};
+};
